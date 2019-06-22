@@ -94,17 +94,17 @@ for i in range(config.data_size):
 print(oneh_caps.shape)
 
 # Loading the images:
-train_imgs = []
-for name in traindict:
-    img = load_img(input_dir+name,target_size=(150,150))
-    train_imgs.append(img_to_array(img))
+# train_imgs = []
+# for name in traindict:
+#     img = load_img(input_dir+name,target_size=(150,150))
+#     train_imgs.append(img_to_array(img))
 
-dev_imgs = []
-for name in devdict:
-    img = load_img(input_dir+name,target_size=(150,150))
-    dev_imgs.append(img_to_array(img))
-dev_imgs = np.asarray(dev_imgs)
-dev_imgs.shape
+# dev_imgs = []
+# for name in devdict:
+#     img = load_img(input_dir+name,target_size=(150,150))
+#     dev_imgs.append(img_to_array(img))
+# dev_imgs = np.asarray(dev_imgs)
+# dev_imgs.shape
 #------------------------------------------------------------------
 
 #--- The image embedding using VGG16---------------------------------------
@@ -183,11 +183,36 @@ model.compile(optimizer=Adam(lr=learning_rate),
 
 from keras_image_captioning.dataset_providers import DatasetProvider
 
-dataset_provider = DatasetProvider()
-epochs = 33  # the number of passes through the entire training set
+# this is the augmentation configuration we will use for training
+train_datagen = ImageDataGenerator(
+    rescale=1. / 255,
+#     rotation_range=30,
+#     width_shift_range=0.2,
+#     height_shift_range=0.2,
+#     shear_range=0.2,
+#     zoom_range=0.2,
+#     horizontal_flip=True
+    )
+
+# this is the augmentation configuration we will use for testing:
+# only rescaling
+test_datagen = ImageDataGenerator(rescale=1. / 255)
+
+train_generator = train_datagen.flow_from_directory(
+    train_data_dir,
+    target_size=(config.img_width, config.img_height),
+    batch_size=config.batch_size,
+    class_mode='binary')
+
+validation_generator = test_datagen.flow_from_directory(
+    validation_data_dir,
+    target_size=(config.img_width, config.img_height),
+    batch_size=config.batch_size,
+    class_mode='binary')
+
 
 # model is the same variable as the one in the previous code snippet
-model.fit_generator(generator=dataset_provider.training_set(),
+model.fit_generator(generator=train_generator,
                     steps_per_epoch=dataset_provider.training_steps,
                     epochs=epochs,
                     validation_data=dataset_provider.validation_set(),
